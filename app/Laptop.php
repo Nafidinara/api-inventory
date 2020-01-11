@@ -9,13 +9,15 @@ class Laptop extends Model
 {
 
     protected $fillable = [
-        'PIC', 'departmen', 'serial_number','type',
+        'PIC', 'divisi', 'serial_number','type',
         'inventaris_code','operating_system','pegawai_id'
     ];
 
+    protected $hidden = ['updated_at', 'created_at'];
+
     protected $primaryKey = 'laptop_id';
 
-    public function users(){
+    public function pegawais(){
         return $this->belongsTo(Pegawai::class);
     }
 

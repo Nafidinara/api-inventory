@@ -11,6 +11,8 @@ class Printer extends Model
         'divisi','type'
     ];
 
+    protected $hidden = ['updated_at', 'created_at'];
+
     protected $primaryKey = 'printer_id';
 
     public function files(){

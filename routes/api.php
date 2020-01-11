@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::prefix('v1')->group(function(){  
+Route::prefix('v1')->group(function(){
 
         Route::prefix('admin')->group(function(){
             Route::post('register', 'UserController@register');
@@ -31,6 +31,11 @@ Route::prefix('v1')->group(function(){
             Route::resource('pegawai','PegawaiController',[
                 'except' => ['create','edit']
             ]);
+
+            Route::resource('laptop','LaptopController',[
+                'except' => ['create','edit']
+            ]);
+
 
             Route::resource('divisi','DivisiController',[
                 'except' => ['create','edit']

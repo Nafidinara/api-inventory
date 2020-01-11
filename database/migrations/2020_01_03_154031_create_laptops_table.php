@@ -16,7 +16,7 @@ class CreateLaptopsTable extends Migration
         Schema::create('laptops', function (Blueprint $table) {
             $table->bigIncrements('laptop_id');
             $table->string('PIC');
-            $table->string('departmen');
+            $table->string('divisi');
             $table->string('type');
             $table->string('serial_number');
             $table->string('inventaris_code');

@@ -9,6 +9,9 @@ class Divisi extends Model
     protected $fillable = [
         'name'
     ];
+
+    protected $hidden = ['updated_at', 'created_at'];
+
     protected $primaryKey = 'divisi_id';
 
     public function pegawais(){

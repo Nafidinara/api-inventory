@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Divisi;
 use App\Pegawai;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -38,7 +40,7 @@ class PegawaiController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -47,22 +49,25 @@ class PegawaiController extends Controller
             'divisi_id' => 'required'
         ]);
 
-       
+
 
         try{
             DB::beginTransaction();
             $name = $request->input('name');
             $divisi_id = $request->input('divisi_id');
-            
+
             $pegawai = new Pegawai([
                 'name' => $name,
                 'divisi_id' => $divisi_id,
             ]);
 
             $pegawai->save();
-            
+
+            $divisi_name = Divisi::where('divisi_id',$divisi_id)->first();
+            $pegawai->divisi_name = $divisi_name->name;
+
             DB::commit();
-            
+
             return response()->json([
                 'message' => 'Data berhasil disimpan',
                 'status_code' => '0001',
@@ -85,28 +90,26 @@ class PegawaiController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
-        try{
-            $pegawai = Pegawai::findOrFail($id);
 
+            $pegawai = Pegawai::findOrFail($id);
+            $jumlah = Pegawai::count('pegawai_id');
+
+            if($id > $jumlah){
+                return response()->json([
+                    'message' => 'Data gagal ditemukan',
+                    'status_code' => '0004',
+                    'data' => '',
+                ],404);
+            }
         return response()->json([
             'message' => 'Data berhasil ditemukan',
             'status_code' => '0001',
             'data' => $pegawai
         ],200);
-
-        }catch(ModelNotFoundException $e){
-            
-            return response()->json([
-            'message' => 'Data gagal ditemukan',
-            'status_code' => '0004',
-            'data' => '',
-            'error' => $e
-            ],404);
-        }
     }
 
     /**
@@ -114,7 +117,7 @@ class PegawaiController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -147,7 +150,7 @@ class PegawaiController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

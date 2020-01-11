@@ -12,6 +12,8 @@ class File extends Model
         'type', 'path'
     ];
 
+    protected $hidden = ['updated_at', 'created_at'];
+
     protected $primaryKey = 'file_id';
 
     public function laptops()

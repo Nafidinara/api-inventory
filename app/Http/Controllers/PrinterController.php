@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 use App\Printer;
 use App\File as AppFile;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\File;
@@ -14,7 +13,7 @@ class PrinterController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -44,7 +43,7 @@ class PrinterController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -52,7 +51,7 @@ class PrinterController extends Controller
             'divisi' => 'required',
             'type' => 'required',
             'file' =>'required|mimes:jpg,pdf,jpeg'
-            
+
         ]);
 
         try{
@@ -67,19 +66,19 @@ class PrinterController extends Controller
             ]);
             $printer->save();
 
-            
+
             $extension = $file->getClientOriginalExtension();
             $path = $file->getFilename().'.'.$extension;
-            $name = 'file'.'.'.$extension;
+            $name = 'printer'.'.'.$extension;
 
             $files = new AppFile();
             $files->type = $file->getClientMimeType();
             $files->path = $path;
 
-            Storage::disk('public')->putFileAs('file', new File($file), $name);
+            Storage::disk('public')->putFileAs('file/printer', new File($file), $name);
 
             $files->save();
-            
+
             DB::table('file_printer')->insert([
                 'printer_id' => $printer->printer_id,
                 'file_id' => $files->file_id,
@@ -87,9 +86,9 @@ class PrinterController extends Controller
 
             $file = AppFile::where('file_id', '=', $files->file_id)->first();
             $printer->file_id = $file->file_id;
-            
+
                 DB::commit();
-                
+
 
             return response()->json([
                 'message' => 'Data berhasil disimpan',
@@ -112,30 +111,30 @@ class PrinterController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
-        $printer = DB::table('file_printer')
+            $printer = DB::table('file_printer')
         ->join('files','file_printer.file_id','=','files.file_id')
         ->join('printers','file_printer.printer_id','=','printers.printer_id')
         ->select('printers.divisi','printers.type','printers.printer_id','files.file_id')
-        ->where('file_printer.printer_id','=',$id);
+        ->where('file_printer.printer_id','=',$id)->get();
 
-        try{
-            $printer->get();
+            $jumlah = Printer::count('printer_id');
+            if ($id > $jumlah){
+                return response()->json([
+                    'message' => 'Data gagal ditemukan',
+                    'status_code' => '0004',
+                    'data' => ''
+                ],200);
+            }
+
             return response()->json([
                 'message' => 'Data berhasil ditemukan',
                 'status_code' => '0001',
                 'data' => $printer
             ],200);
-        }catch(ModelNotFoundException $e){
-            return response()->json([
-                'message' => 'Data gagal ditemukan',
-                'status_code' => '0004',
-                'data' => $printer
-            ],200);
-        }
     }
 
     /**
@@ -143,7 +142,7 @@ class PrinterController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -168,7 +167,7 @@ class PrinterController extends Controller
         $files->path = $path;
 
         Storage::disk('public')
-        ->putFileAs('file', $file, 'printer'.'.'.$extension);
+        ->putFileAs('file/printer', $file, 'printer'.'.'.$extension);
         $files->update();
 
 
@@ -194,10 +193,12 @@ class PrinterController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, $id)
     {
+        $printerAll = Printer::all();
+
         try{
             DB::beginTransaction();
             $printer = Printer::findOrFail($id);
@@ -211,10 +212,12 @@ class PrinterController extends Controller
 
         return response()->json([
             'message' => 'Data berhasil di hapus',
-            'status_code' => '0001'
+            'status_code' => '0001',
+            'data' => $printerAll
         ],200);
 
         } catch(\Exception $e){
+            DB::rollBack();
             return response()->json([
                 'message' => 'Data gagal di hapus',
                 'status_code' => '0006',
@@ -242,10 +245,10 @@ class PrinterController extends Controller
             $files->type = $file->getClientMimeType();
             $files->path = $path;
 
-            Storage::disk('public')->putFileAs('file', new File($file), $name);
+            Storage::disk('public')->putFileAs('file/printer', new File($file), $name);
 
             $files->save();
-            
+
             DB::table('file_printer')->insert([
                 'printer_id' => $printer->printer_id,
                 'file_id' => $files->file_id,
@@ -271,6 +274,6 @@ class PrinterController extends Controller
                 'error' => $e
             ]);
         }
-        
+
     }
 }

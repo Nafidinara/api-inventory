@@ -12,9 +12,11 @@ class Pegawai extends Model
         'name','divisi_id'
     ];
 
+    protected $hidden = ['updated_at', 'created_at'];
+
     protected $primaryKey = 'pegawai_id';
 
-    public function laptop(){
+    public function laptops(){
         return $this->hasMany(Laptop::class);
     }
 
